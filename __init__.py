@@ -50,16 +50,54 @@ class CEF_OT_tris_convert_to_quads_ex(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if len(bpy.context.selected_objects) != 1:
-            self.report({"WARNING"}, "Select one object.")
+        selected_objects = [obj for obj in context.selected_objects if obj.type == 'MESH']
+        
+        if len(selected_objects) == 0:
+            self.report({"WARNING"}, "Select at least one mesh object.")
             return {"CANCELLED"}
 
         try:
-            self.convert_tris_to_quads(context)
+            # Store the current mode and active object
+            original_mode = context.mode
+            original_active = context.active_object
+            
+            # Process each selected object
+            processed_count = 0
+            for obj in selected_objects:
+                # Ensure we're in object mode to change active object
+                if context.mode != 'OBJECT':
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                
+                # Set this object as active
+                context.view_layer.objects.active = obj
+                
+                # Convert tris to quads for this object (handles mode switching internally)
+                self.convert_tris_to_quads(context)
+                processed_count += 1
+            
+            # Restore original mode and active object
+            if original_active:
+                try:
+                    # Check if object still exists by trying to access its name
+                    _ = original_active.name
+                    if original_active.name in bpy.data.objects:
+                        context.view_layer.objects.active = original_active
+                        if original_mode == 'EDIT_MESH' and original_active.type == 'MESH':
+                            bpy.ops.object.mode_set(mode="EDIT")
+                        else:
+                            bpy.ops.object.mode_set(mode="OBJECT")
+                except (ReferenceError, AttributeError):
+                    # Object was deleted, just restore mode if possible
+                    if original_mode == 'EDIT_MESH':
+                        bpy.ops.object.mode_set(mode="OBJECT")
+            
         except ImportError:
             self.report({"ERROR"}, "Pulp is not installed")
             return {"CANCELLED"}
 
+        if processed_count > 1:
+            self.report({"INFO"}, f"Processed {processed_count} objects.")
+        
         return {"FINISHED"}
 
     def convert_tris_to_quads(self, context):
