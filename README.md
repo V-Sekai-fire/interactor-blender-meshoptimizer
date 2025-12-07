@@ -1,83 +1,82 @@
-# Optimized Tris to Quads Converter
+# Mesh Decimator (meshopt)
 
 ## Overview
 
-**Optimized Tris to Quads Converter** is a Blender add-on that converts triangles (tris) in a mesh to quadrilaterals (quads) using mathematical optimization. This approach ensures the most optimal conversion of tris to quads, resulting in cleaner and more efficient mesh topology.
+**Mesh Decimator (meshopt)** is a Blender add-on that reduces the number of triangles in a mesh using the [meshoptimizer](https://github.com/zeux/meshoptimizer) library. This add-on provides high-quality mesh simplification while preserving mesh appearance and topology as much as possible.
 
 ## Prerequisite
 
-To use this add-on, you need to have the Pulp optimization library installed. The add-on provides an option to install Pulp directly from the preferences.
-
-## Comparison of Topology
-
-The images below compare the topology produced by Blender's default tris-to-quads conversion tool and the topology produced by the **Optimized Tris to Quads Converter**.
-
-### Original Mesh with Tris
-
-![Original Mesh with Tris](img/og-tris.png)
-
-### Default Blender Tris to Quads
-
-![Default Blender Tris to Quads](img/defaultTTQ.png)
-
-### Optimized Tris to Quads Converter
-
-![Optimized Tris to Quads](img/OTQC.png)
-
-As illustrated in the comparison images, the optimized converter maintains better edge flow and reduces the number of unnecessary vertices, resulting in a more aesthetically pleasing and functional mesh.
+To use this add-on, you need to have the meshoptimizer library built as a shared library (`.dll` on Windows, `.so` on Linux, `.dylib` on macOS). The add-on will attempt to load the library from:
+1. The add-on directory
+2. A `lib` subdirectory in the add-on directory
+3. System library paths
 
 ## Features
 
-- Converts selected tris in a mesh to quads using the Pulp optimization library.
-- Ensures cleaner and more efficient mesh topology.
-- Simple and user-friendly interface with an easy-to-use operator.
+- **High-quality mesh decimation** using the meshoptimizer library
+- **Error-based simplification** (like Godot Engine) - error threshold based on scene area
+- **Border locking** option to preserve mesh boundaries
+- **Simple interface** integrated into Blender's mesh editing workflow
+- **Batch processing** of multiple selected objects
 
 ## Installation
 
-1. Download the ZIP file containing the `__init__.py` script and other necessary files.
-2. Open Blender and go to `Edit > Preferences > Add-ons`.
-3. Click `Install` and select the downloaded ZIP file.
-4. Enable the add-on from the list.
+1. Build the meshoptimizer library as a shared library (see Building section below)
+2. Place the shared library in the add-on directory or system library path
+3. Download the ZIP file containing the `__init__.py` script
+4. Open Blender and go to `Edit > Preferences > Add-ons`
+5. Click `Install` and select the downloaded ZIP file
+6. Enable the add-on from the list
+
+## Building meshoptimizer
+
+### Quick Build (Recommended)
+
+Use the provided build scripts:
+
+- **Windows**: Run `build_windows.bat`
+- **Linux**: Run `./build_linux.sh`
+- **macOS**: Run `./build_macos.sh`
+
+The scripts will automatically build the library and copy it to the add-on directory.
+
+### Manual Build
+
+See [BUILD.md](BUILD.md) for detailed manual build instructions.
+
+**Note**: The CMake option is `MESHOPT_BUILD_SHARED_LIBS=ON` (not `BUILD_SHARED_LIBS`).
 
 ## Usage
 
-### Installing Pulp
+### Decimating Meshes
 
-The add-on requires the Pulp optimization library. You can install it directly from the add-on preferences:
+1. Select one or more mesh objects in Object Mode
+2. Go to `Edit > Mesh > Decimate Mesh (meshopt)` in the 3D Viewport menu
+3. Configure the decimation settings:
+   - **Target Error**: Maximum allowed error relative to mesh bounding box size (scene area)
+   - **Lock Border**: Preserve vertices on mesh borders
+4. Click `OK` to apply decimation
 
-1. Go to `Edit > Preferences > Add-ons`.
-2. Find the **Optimized Tris to Quads Converter** add-on in the list.
-3. If Pulp is not already installed, click the `Install Pulp` button.
-4. If Pulp is installed, it will display "Pulp is installed".
+### Settings
 
-### Converting Tris to Quads
+- **Target Error**: Maximum geometric error allowed, relative to the mesh bounding box size (scene area). For example:
+  - `0.01` = 1% of the mesh's bounding box diagonal
+  - `0.001` = 0.1% (higher quality, more triangles)
+  - `0.1` = 10% (lower quality, fewer triangles)
+  
+  This works like Godot Engine's mesh simplification - the error is calculated based on the scene area (mesh bounding box), ensuring consistent quality regardless of mesh size.
 
-1. Enter `Edit Mode` and select the faces you want to convert.
-2. In the 3D Viewport, go to `Face > Optimized Tris to Quads Converter`.
-3. The selected tris will be converted to quads using mathematical optimization.
+- **Lock Border**: When enabled, vertices on mesh borders (edges with only one adjacent face) will not be moved during simplification.
 
 ## Why Use This Add-on?
 
-- **Optimization**: Uses advanced mathematical optimization to ensure the best possible conversion of tris to quads.
-- **Clean Topology**: Results in cleaner and more efficient mesh topology, which is beneficial for modeling, animation, and simulation.
-- **Ease of Use**: Simple interface integrated directly into Blender's editing workflow.
+- **High Quality**: meshoptimizer uses advanced algorithms to preserve mesh appearance during simplification
+- **Fast**: Optimized C++ implementation provides excellent performance
+- **Error-Based**: Like Godot Engine, uses error threshold based on scene area for consistent quality
+- **Topology Preservation**: Maintains mesh topology when possible
+- **Professional Tool**: Used in production pipelines for game development and 3D content creation
 
 ## Credits
 
-- **Original Author**: Tsutomu Saito (https://github.com/SaitoTsutomu/Tris-Quads-Ex)
-- **Improved Version**: Rulesobeyer (https://github.com/Rulesobeyer/)
-
-### Acknowledgement to the Original Author
-
-This add-on is based on the original work of Tsutomu Saito. In his article on Qiita, Tsutomu Saito describes the development process and the motivation behind the "Tris to Quads Ex" add-on for Blender. The article explains how the add-on uses the Pulp optimization library to convert tris to quads, ensuring a more efficient and cleaner mesh topology.
-
-Tsutomu Saito's work focused on addressing the limitations of Blender's default tris-to-quads conversion tool. By leveraging mathematical optimization, the "Tris to Quads Ex" add-on produces superior results, making it an invaluable tool for Blender users aiming for high-quality 3D models.
-
-The original article provides a detailed explanation of the methodology and implementation, including:
-- The motivation for creating the add-on.
-- The mathematical principles behind the optimization process.
-- Step-by-step instructions on how to use the add-on.
-
-Tsutomu Saito's innovative approach has significantly improved the tris-to-quads conversion process, and this improved version builds upon his foundation. We are grateful for his contributions to the Blender community.
-
-[Read the original article on Qiita](https://qiita.com/SaitoTsutomu/items/b608c80d70a54718ec78).
+- **meshoptimizer library**: [zeux/meshoptimizer](https://github.com/zeux/meshoptimizer) by Arseny Kapoulkine
+- **License**: MIT (see LICENSE file)
